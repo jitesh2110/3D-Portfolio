@@ -4,6 +4,8 @@ import { GLTFLoader } from 'https://unpkg.com/three@0.159.0/examples/jsm/loaders
 import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
 import * as TWEEN from 'https://cdnjs.cloudflare.com/ajax/libs/tween.js/21.0.0/tween.esm.min.js';
 
+import PortfolioPopup from './PortfolioPopup';
+
 const App = () => {
     // --- All your original global variables as refs ---
     const sceneRef = useRef(null);
@@ -21,6 +23,13 @@ const App = () => {
     const raycasterRef = useRef(new THREE.Raycaster());
     const pointerRef = useRef(new THREE.Vector2());
     const signboardMeshesRef = useRef([]);
+    const soundRef = useRef(null);
+    const audioStartedRef = useRef(false);
+    const hoveredSignRef = useRef(null);
+
+    // NEW REF for 2dfolio button
+    const [showPortfolioPopup, setShowPortfolioPopup] = useState(false);
+    const portfolioButtonRef = useRef(null);
 
     // Scene State Constants
     const START_CAMERA_POSITION = new THREE.Vector3(-130, 35, 210);
@@ -60,6 +69,82 @@ const App = () => {
         }
     };
 
+    const togglePortfolioPopup = () => {
+        setShowPortfolioPopup(!showPortfolioPopup);
+    }
+
+    const onMouseMove = useCallback((event) => {
+    // Update pointer coordinates
+    pointerRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointerRef.current.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    }, []);
+
+    // NEW FUNCTION: Handle 2D Portfolio button click
+    const open2DFolio = () => {
+        window.open('https://your-2d-portfolio-url.com', '_blank');
+        // Replace with your actual 2D portfolio URL
+    };
+
+    const handleHover = () => {
+        if (!cameraRef.current || signboardMeshesRef.current.length === 0) return;
+
+        raycasterRef.current.setFromCamera(pointerRef.current, cameraRef.current);
+        
+        // We only check for intersections with the interactive meshes on the signboard
+        const intersects = raycasterRef.current.intersectObjects(signboardMeshesRef.current, true);
+
+        if (intersects.length > 0) {
+            const obj = intersects[0].object;
+
+            if (hoveredSignRef.current !== obj) {
+                // Reset previous hover
+                if (hoveredSignRef.current) {
+                    new TWEEN.Tween(hoveredSignRef.current.scale)
+                        .to({ x: 1, y: 1, z: 1 }, 200)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .start();
+                }
+
+                // Set new hover scale on the specific mesh (Poster/Text)
+                hoveredSignRef.current = obj;
+                new TWEEN.Tween(obj.scale)
+                    .to({ x: 1.2, y: 1.2, z: 1.2 }, 300) // Scale up the individual plate
+                    .easing(TWEEN.Easing.Back.Out)
+                    .start();
+                
+                document.body.style.cursor = 'pointer';
+            }
+        } else {
+        // Reset if mouse is not over any interactive signboard mesh
+        if (hoveredSignRef.current) {
+            new TWEEN.Tween(hoveredSignRef.current.scale)
+                .to({ x: 1, y: 1, z: 1 }, 200)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
+            hoveredSignRef.current = null;
+            document.body.style.cursor = 'default';
+        }
+        }
+    };
+
+    const setupAudio = (camera) => {
+    // 1. Create an AudioListener and add it to the camera
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    // 2. Create a global audio source
+    const sound = new THREE.Audio(listener);
+
+    // 3. Load the sound and set it as the Audio object's buffer
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load('./bgsound.mp3', (buffer) => {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.3); // Adjust volume from 0 to 1
+        soundRef.current = sound;
+    });
+    };
+
     const createRadialFadeTexture = () => {
         const size = 512;
         const canvas = document.createElement('canvas');
@@ -79,16 +164,16 @@ const App = () => {
 
     const enableClipping = (model) => { 
         model.traverse((child) => {
-            if (child.isMesh) {
-                child.castShadow = false; 
-                child.receiveShadow = false; 
-                
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                materials.forEach(material => {
-                    material.clippingPlanes = [floorClippingPlane];
-                    material.needsUpdate = true;
-                });
-            }
+        if (child.isMesh) {
+            child.castShadow = false; 
+            child.receiveShadow = false; 
+            
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            materials.forEach(material => {
+                material.clippingPlanes = [floorClippingPlane];
+                material.needsUpdate = true;
+            });
+        }
         });
     };
 
@@ -100,23 +185,23 @@ const App = () => {
         const positions = [];
 
         for (let i = 0; i < starsCount; i++) {
-            const x = THREE.MathUtils.randFloatSpread(200);
-            const y = THREE.MathUtils.randFloatSpread(200);
-            const z = THREE.MathUtils.randFloatSpread(200);
-            
-            if (y > 10 && (x*x + y*y + z*z) > (DOME_RADIUS * DOME_RADIUS)) {
-                positions.push(x, y, z);
-            }
+        const x = THREE.MathUtils.randFloatSpread(200);
+        const y = THREE.MathUtils.randFloatSpread(200);
+        const z = THREE.MathUtils.randFloatSpread(200);
+        
+        if (y > 10 && (x*x + y*y + z*z) > (DOME_RADIUS * DOME_RADIUS)) {
+            positions.push(x, y, z);
+        }
         }
 
         starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
         const starsMaterial = new THREE.PointsMaterial({
-            color: 0xffffff,
-            size: 0.5,
-            sizeAttenuation: true,
-            transparent: true,
-            opacity: 0.8
+        color: 0xffffff,
+        size: 0.5,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.8
         });
 
         starFieldRef.current = new THREE.Points(starsGeometry, starsMaterial);
@@ -142,7 +227,7 @@ const App = () => {
         
         spotLight.userData.isBillboardLight = true;
         if (!sceneRef.current.userData.billboardLights) {
-            sceneRef.current.userData.billboardLights = [];
+        sceneRef.current.userData.billboardLights = [];
         }
         sceneRef.current.userData.billboardLights.push(spotLight);
 
@@ -162,51 +247,51 @@ const App = () => {
         sceneRef.current.userData.lampLights = []; 
 
         model.traverse((child) => {
-            if (child.name.startsWith("Cone") && child.children.length >= 2) {
-                const bulb = child.children[1]; 
-                
-                const spotLight = new THREE.SpotLight(
-                    LAMP_COLOR, 
-                    SPOT_INTENSITY, 
-                    SPOT_DISTANCE, 
-                    SPOT_ANGLE, 
-                    SPOT_PENUMBRA
-                );
-                
-                spotLight.position.set(0, LIGHT_OFFSET_Y, LIGHT_OFFSET_Z); 
-                
-                const target = new THREE.Object3D();
-                target.position.set(0, -10, 5); 
+        if (child.name.startsWith("Cone") && child.children.length >= 2) {
+            const bulb = child.children[1]; 
+            
+            const spotLight = new THREE.SpotLight(
+                LAMP_COLOR, 
+                SPOT_INTENSITY, 
+                SPOT_DISTANCE, 
+                SPOT_ANGLE, 
+                SPOT_PENUMBRA
+            );
+            
+            spotLight.position.set(0, LIGHT_OFFSET_Y, LIGHT_OFFSET_Z); 
+            
+            const target = new THREE.Object3D();
+            target.position.set(0, -10, 5); 
 
-                spotLight.target = target;
-                bulb.add(spotLight);
-                bulb.add(target); 
+            spotLight.target = target;
+            bulb.add(spotLight);
+            bulb.add(target); 
 
-                spotLight.castShadow = false; 
-                
-                const glow = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.15, 8, 8),
-                    new THREE.MeshBasicMaterial({
-                        color: LAMP_LIGHT_COLOR,
-                        transparent: true,
-                        opacity: 0.9
-                    })
-                );
-                glow.position.copy(spotLight.position); 
+            spotLight.castShadow = false; 
+            
+            const glow = new THREE.Mesh(
+                new THREE.SphereGeometry(0.15, 8, 8),
+                new THREE.MeshBasicMaterial({
+                    color: LAMP_LIGHT_COLOR,
+                    transparent: true,
+                    opacity: 0.9
+                })
+            );
+            glow.position.copy(spotLight.position); 
 
-                bulb.add(glow); 
-                
-                sceneRef.current.userData.lampLights.push(spotLight);
-                glow.material.userData.isLampEmitter = false; 
-            }
+            bulb.add(glow); 
+            
+            sceneRef.current.userData.lampLights.push(spotLight);
+            glow.material.userData.isLampEmitter = false; 
+        }
         });
     };
 
     const toggleBillboardLights = (visible) => {
         if (sceneRef.current.userData.billboardLights) {
-            sceneRef.current.userData.billboardLights.forEach(light => {
-                light.visible = visible;
-            });
+        sceneRef.current.userData.billboardLights.forEach(light => {
+            light.visible = visible;
+        });
         }
     };
 
@@ -230,7 +315,7 @@ const App = () => {
     toggleBillboardLights(false);
     if (sceneRef.current.userData.lampLights) {
         sceneRef.current.userData.lampLights.forEach(light => {
-            light.visible = false;
+        light.visible = false;
         });
     }
     else {
@@ -243,7 +328,6 @@ const App = () => {
     isDayRef.current = true;
     console.log('Switched to Day - ALL LIGHTS OFF');
 };
-
 
     const setupNightEnvironment = () => {
         sceneRef.current.background = NIGHT_COLOR;
@@ -258,20 +342,20 @@ const App = () => {
         directionalLight.position.set(10, 30, 20);
 
         if (!starFieldRef.current) {
-            addStars();
+        addStars();
         }
         starFieldRef.current.visible = true;
 
         toggleBillboardLights(true);
 
         if (sceneRef.current.userData.lampLights) {
-            sceneRef.current.userData.lampLights.forEach(light => {
-                light.visible = true;
-            });
+        sceneRef.current.userData.lampLights.forEach(light => {
+            light.visible = true;
+        });
         }
 
         if (toggleButtonRef.current) {
-            toggleButtonRef.current.textContent = 'Switch to Day ☀️';
+        toggleButtonRef.current.textContent = 'Switch to Day ☀️';
         }
         isDayRef.current = false;
         console.log('Switched to Night');
@@ -279,15 +363,26 @@ const App = () => {
 
     const toggleEnvironment = () => {
         if (isDayRef.current) {
-            setupNightEnvironment();
+        setupNightEnvironment();
         } else {
-            setupDayEnvironment();
+        setupDayEnvironment();
         }
     };
 
     const onDocumentClick = useCallback((event) => {
-        if (!controlsRef.current?.enabled) return;
+        // 1. Handle Audio Autoplay unlocking
+        if (!audioStartedRef.current && soundRef.current) {
+        const context = THREE.AudioContext.getContext();
+        if (context.state === 'suspended') {
+            context.resume();
+        }
+        soundRef.current.play();
+        audioStartedRef.current = true;
+        console.log("Audio started by user gesture");
+        }
 
+        if (!controlsRef.current?.enabled) return;
+        
         pointerRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
         pointerRef.current.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
@@ -295,24 +390,24 @@ const App = () => {
         const intersects = raycasterRef.current.intersectObjects(signboardMeshesRef.current, true);
 
         if (intersects.length > 0) {
-            event.stopPropagation();
-            const clickedObj = intersects[0].object;
+        event.stopPropagation();
+        const clickedObj = intersects[0].object;
 
-            if (clickedObj.userData.targetBillboard) {
-                moveCameraToBillboard(clickedObj.userData.targetBillboard);
+        if (clickedObj.userData.targetBillboard) {
+            moveCameraToBillboard(clickedObj.userData.targetBillboard);
+        }
+        else if (clickedObj.userData.externalUrl) {
+            const url = clickedObj.userData.externalUrl;
+            
+            if (clickedObj.userData.isDownload) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Jitesh_Deshmukh_Resume.pdf';
+            link.click();
+            } else {
+            window.open(url, '_blank');
             }
-            else if (clickedObj.userData.externalUrl) {
-                const url = clickedObj.userData.externalUrl;
-                
-                if (clickedObj.userData.isDownload) {
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'Jitesh_Deshmukh_Resume.pdf';
-                    link.click();
-                } else {
-                    window.open(url, '_blank');
-                }
-            }
+        }
         }
     }, []);
 
@@ -329,8 +424,8 @@ const App = () => {
         const QUARTER_TURN = -Math.PI / 2;
         
         const correctionQuaternion = new THREE.Quaternion().setFromAxisAngle(
-            new THREE.Vector3(0, 1, 0), 
-            QUARTER_TURN 
+        new THREE.Vector3(0, 1, 0), 
+        QUARTER_TURN 
         );
         
         viewingDirection.applyQuaternion(correctionQuaternion);
@@ -350,25 +445,25 @@ const App = () => {
             .to({ x: targetPosition.x, y: targetPosition.y, z: targetPosition.z }, 1000)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .onUpdate(() => {
-                controlsRef.current.update(); 
+            controlsRef.current.update(); 
             })
             .onComplete(() => {
-                controlsRef.current.minDistance = 5;
-                controlsRef.current.maxDistance = 15;
-                controlsRef.current.maxPolarAngle = Math.PI / 1.9; 
-                controlsRef.current.enabled = true; 
-                
-                if (backButtonRef.current) {
-                    backButtonRef.current.style.display = 'block';
-                }
-                console.log("Entered Billboard Focus Mode.");
+            controlsRef.current.minDistance = 5;
+            controlsRef.current.maxDistance = 7;
+            controlsRef.current.maxPolarAngle = Math.PI / 1.9; 
+            controlsRef.current.enabled = true; 
+            
+            if (backButtonRef.current) {
+                backButtonRef.current.style.display = 'block';
+            }
+            console.log("Entered Billboard Focus Mode.");
             })
             .start();
     };
 
     const returnToStartScene = () => {
         if (backButtonRef.current) {
-            backButtonRef.current.style.display = 'none';
+        backButtonRef.current.style.display = 'none';
         }
 
         controlsRef.current.enabled = false;
@@ -382,41 +477,44 @@ const App = () => {
             .to(START_CONTROLS_TARGET, 1200)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .onUpdate(() => {
-                controlsRef.current.update();
+            controlsRef.current.update();
             })
             .onComplete(() => {
-                controlsRef.current.minDistance = MIN_SCENE_DISTANCE;
-                controlsRef.current.maxDistance = MAX_SCENE_DISTANCE;
-                controlsRef.current.maxPolarAngle = Math.PI / 2.1;
-                controlsRef.current.enabled = true; 
-                console.log("Returned to main scene.");
+            controlsRef.current.minDistance = MIN_SCENE_DISTANCE;
+            controlsRef.current.maxDistance = MAX_SCENE_DISTANCE;
+            cameraRef.current.position.copy(START_CAMERA_POSITION);
+            controlsRef.current.target.copy(START_CONTROLS_TARGET);
+
+            controlsRef.current.maxPolarAngle = Math.PI / 2.1;
+            controlsRef.current.enabled = true; 
+            console.log("Returned to main scene.");
             })
             .start();
     };
 
     const onWindowResize = () => {
         if (cameraRef.current && rendererRef.current) {
-            cameraRef.current.aspect = window.innerWidth / window.innerHeight;
-            cameraRef.current.updateProjectionMatrix();
-            rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+        cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+        cameraRef.current.updateProjectionMatrix();
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
         }
     };
 
     const animate = () => {
         requestAnimationFrame(animate);
-        
+        handleHover();
         const delta = clockRef.current.getDelta();
         if (snowfallMixerRef.current) {
-            snowfallMixerRef.current.update(delta);
+        snowfallMixerRef.current.update(delta);
         }
         
         TWEEN.update(); 
 
         if (controlsRef.current) {
-            controlsRef.current.update();
+        controlsRef.current.update();
         }
         if (rendererRef.current && sceneRef.current && cameraRef.current) {
-            rendererRef.current.render(sceneRef.current, cameraRef.current);
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
         }
     };
 
@@ -431,12 +529,15 @@ const App = () => {
         const aspectRatio = window.innerWidth / window.innerHeight;
         cameraRef.current = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
         cameraRef.current.position.copy(START_CAMERA_POSITION);
+        
+        // audio setup
+        setupAudio(cameraRef.current);
 
         // 3. Renderer setup
         const canvas = canvasRef.current;
         rendererRef.current = new THREE.WebGLRenderer({ 
-            canvas, 
-            antialias: true 
+        canvas, 
+        antialias: true 
         });
         rendererRef.current.setSize(window.innerWidth, window.innerHeight);
         rendererRef.current.setPixelRatio(window.devicePixelRatio);
@@ -465,10 +566,10 @@ const App = () => {
         const fadeTexture = createRadialFadeTexture();
 
         const material = new THREE.MeshBasicMaterial({
-            color: 0xeeeeee,
-            transparent: true,
-            alphaMap: fadeTexture,
-            side: THREE.DoubleSide
+        color: 0xeeeeee,
+        transparent: true,
+        alphaMap: fadeTexture,
+        side: THREE.DoubleSide
         });
         
         planeRef.current = new THREE.Mesh(geometry, material);
@@ -517,8 +618,8 @@ const App = () => {
         billboard3Ref.current.rotation.y = Math.PI / 0.85;
         
         [billboard1Ref.current, billboard2Ref.current, billboard3Ref.current].forEach(billboard => {
-            enableClipping(billboard); 
-            sceneRef.current.add(billboard);
+        enableClipping(billboard); 
+        sceneRef.current.add(billboard);
         });
 
         const lightOffset1 = new THREE.Vector3(10, 10, 2); 
@@ -538,32 +639,32 @@ const App = () => {
         sceneRef.current.add(signboard);
         
         const externalLinks = {
-            'Linkedin': 'https://www.linkedin.com/in/jitesh-deshmukh-4a6252334/',
-            'Git': 'https://github.com/jitesh2110',
-            'Insta': 'https://www.instagram.com/jitesh_7200/',
-            'Resume': './resume.pdf'
+        'Linkedin': 'https://www.linkedin.com/in/jitesh-deshmukh-4a6252334/',
+        'Git': 'https://github.com/jitesh2110',
+        'Insta': 'https://www.instagram.com/jitesh_7200/',
+        'Resume': './resume.pdf'
         };
 
         signboard.traverse((child) => {
-            if (child.isMesh) {
-                const meshName = child.name;
+        if (child.isMesh) {
+            const meshName = child.name;
 
-                let targetBillboard = null;
-                if (meshName === 'Aboutme') targetBillboard = billboard1Ref.current;
-                if (meshName === 'Projects') targetBillboard = billboard2Ref.current;
-                if (meshName === 'Skills') targetBillboard = billboard3Ref.current;
+            let targetBillboard = null;
+            if (meshName === 'Aboutme') targetBillboard = billboard1Ref.current;
+            if (meshName === 'Projects') targetBillboard = billboard2Ref.current;
+            if (meshName === 'Skills') targetBillboard = billboard3Ref.current;
 
-                if (targetBillboard) {
-                    child.userData.targetBillboard = targetBillboard;
-                    signboardMeshesRef.current.push(child);
-                }
-
-                if (externalLinks[meshName]) {
-                    child.userData.externalUrl = externalLinks[meshName];
-                    child.userData.isDownload = (meshName === 'Resume');
-                    signboardMeshesRef.current.push(child);
-                }
+            if (targetBillboard) {
+            child.userData.targetBillboard = targetBillboard;
+            signboardMeshesRef.current.push(child);
             }
+
+            if (externalLinks[meshName]) {
+            child.userData.externalUrl = externalLinks[meshName];
+            child.userData.isDownload = (meshName === 'Resume');
+            signboardMeshesRef.current.push(child);
+            }
+        }
         });
         
         const SNOWTREE_SCALE = 0.8;
@@ -590,11 +691,11 @@ const App = () => {
         sceneRef.current.add(snowfall);
         
         if (snowfallGLTF.animations && snowfallGLTF.animations.length) {
-            snowfallMixerRef.current = new THREE.AnimationMixer(snowfall);
-            const clip = snowfallGLTF.animations[0];
-            const action = snowfallMixerRef.current.clipAction(clip);
-            action.loop = THREE.LoopRepeat;
-            action.play();
+        snowfallMixerRef.current = new THREE.AnimationMixer(snowfall);
+        const clip = snowfallGLTF.animations[0];
+        const action = snowfallMixerRef.current.clipAction(clip);
+        action.loop = THREE.LoopRepeat;
+        action.play();
         }
         
         // 9. Initial setup
@@ -602,13 +703,17 @@ const App = () => {
 
         // Event listeners
         if (toggleButtonRef.current) {
-            toggleButtonRef.current.addEventListener('click', toggleEnvironment);
+        toggleButtonRef.current.addEventListener('click', toggleEnvironment);
+        }
+        // NEW EVENT LISTENER: Add 2dfolio button click handler
+       if (portfolioButtonRef.current) {
+            portfolioButtonRef.current.addEventListener('click', togglePortfolioPopup);
         }
         window.addEventListener('resize', onWindowResize, false);
         window.addEventListener('click', onDocumentClick); 
         
         if (backButtonRef.current) {
-            backButtonRef.current.addEventListener('click', returnToStartScene);
+        backButtonRef.current.addEventListener('click', returnToStartScene);
         }
 
         animate();
@@ -617,33 +722,74 @@ const App = () => {
     // --- useEffect for initialization ---
     useEffect(() => {
         init();
+        window.addEventListener('mousemove', onMouseMove); // Add this
 
         return () => {
-            window.removeEventListener('resize', onWindowResize);
-            window.removeEventListener('click', onDocumentClick);
-            if (rendererRef.current) {
-                rendererRef.current.dispose();
+
+        window.removeEventListener('mousemove', onMouseMove); // Clean up
+        window.removeEventListener('resize', onWindowResize);
+        window.removeEventListener('click', onDocumentClick);
+        // NEW CLEANUP: Remove portfolio button event listener
+       if (portfolioButtonRef.current) {
+                portfolioButtonRef.current.removeEventListener('click', togglePortfolioPopup);
             }
         };
     }, []);
 
     return (
         <>
-            <button 
-                ref={toggleButtonRef} 
-                id="toggle-button"
-            >
+            {/* ALL YOUR ORIGINAL BUTTONS */}
+            <button ref={toggleButtonRef} id="toggle-button">
                 Switch to Night 🌙
             </button>
             
-            <button 
-                ref={backButtonRef} 
-                id="back-button"
-            >
+            <button ref={backButtonRef} id="back-button">
                 Back to Scene ⬅️
             </button>
-            
+
+            {/* 2DFOLIO BUTTON (unchanged) */}
+            <button 
+                ref={portfolioButtonRef}
+                id="portfolio-button"
+                style={{
+                    position: 'fixed',
+                    bottom: '30px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 1000,
+                    padding: '12px 24px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '25px',
+                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
+                }}
+                // ... (hover styles unchanged)
+            >
+                2Dfolio
+            </button>
+
+            {/* 👇 SIMPLIFIED: Just use the component! */}
+            <PortfolioPopup 
+                isOpen={showPortfolioPopup} 
+                onClose={() => setShowPortfolioPopup(false)} 
+            />
+
             <canvas ref={canvasRef} />
+            
+            {/* Animation CSS */}
+            <style jsx>{`
+                @keyframes popupEntrance {
+                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7) rotateY(-90deg); }
+                    100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotateY(0deg); }
+                }
+            `}</style>
         </>
     );
 };

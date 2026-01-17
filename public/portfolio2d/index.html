@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JITESH DESHMUKH | 2D Portfolio [CYBERPUNK]</title>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'accent-dark': '#00ffaa',
+                        'accent-header': '#ffffff',
+                        'light-bg': '#121212',
+                        'lighter-bg': '#1f2937',
+                        'text-primary': '#e5e7eb',
+                        'text-secondary': '#9ca3af',
+                        'border-color': '#374151',
+                        'skill-header': '#00cc88',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE/Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;             /* Chrome/Safari */
+}
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #121212 50%, #1a1a2a 100%);
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+        .system-card-shadow {
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4), 0 0 40px rgba(0, 255, 170, 0.15);
+        }
+        .project-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 255, 170, 0.3);
+        }
+        .project-image-large {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid #00ffaa;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.6);
+            transition: all 0.4s ease;
+        }
+        .project-image-large:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.9);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: linear-gradient(45deg, #00ffaa, #00cc88);
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.6);
+            transform: translateY(-2px);
+        }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen p-2 flex flex-col items-center justify-center">
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full h-full max-w-none bg-lighter-bg border-4 border-accent-dark system-card-shadow p-4 rounded-2xl text-text-primary tracking-wider scrollbar-hide overflow-y-auto">
+
+        <!-- HEADER WITH TIME -->
+        <header class="flex flex-col sm:flex-row justify-between text-sm pb-6 mb-8 border-b-2 border-dashed border-border-color">
+            <span class="text-accent-dark font-bold text-xl mb-2 sm:mb-0 glitch">:: 2D PORTFOLIO SYSTEM [ACCESS: FULL]</span>
+            <div class="flex items-center space-x-4">
+                <span>SYSTEM_TIME:</span>
+                <span id="current-time" class="text-accent-dark font-mono bg-light-bg px-3 py-1 rounded border border-accent-dark text-sm">14:32:17 IST</span>
+            </div>
+        </header>
+
+        
+
+        <!-- TABS NAVIGATION -->
+        <div class="flex flex-wrap justify-center gap-4 mb-12 bg-light-bg p-4 rounded-xl border-2 border-border-color">
+            <button class="tab-button px-8 py-3 bg-transparent border-2 border-accent-dark text-accent-dark font-bold rounded-xl text-lg active" data-tab="about">ABOUT</button>
+            <button class="tab-button px-8 py-3 bg-transparent border-2 border-accent-dark text-text-primary font-bold rounded-xl text-lg" data-tab="projects">PROJECTS</button>
+            <button class="tab-button px-8 py-3 bg-transparent border-2 border-accent-dark text-text-primary font-bold rounded-xl text-lg" data-tab="skills">SKILLS</button>
+        </div>
+
+        <!-- ABOUT TAB -->
+        <div id="about-tab" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+                <!-- Profile Section -->
+                <div class="lg:col-span-1 flex flex-col items-center text-center">
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 border-4 border-accent-dark flex items-center justify-center mb-8 system-card-shadow" 
+                         style="width: 220px; height: 220px; border-radius: 50%; overflow: hidden;">
+                        <img src="./assets/jitesh.jpg" alt="Jitesh Deshmukh" 
+                             class="object-cover w-full h-full opacity-90 hover:opacity-100 transition-all duration-500 hover:scale-110">
+                    </div>
+                    <p class="text-2xl font-bold text-accent-dark mb-4 tracking-wide">*[JITESH MAHENDRA DESHMUKH]*</p>
+                    
+                    <div class="text-left text-sm w-full max-w-md mt-4 space-y-3 p-6 border-t-2 border-b-2 border-dashed border-border-color bg-light-bg rounded-xl text-text-secondary">
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div><span class="text-accent-dark font-bold block">DOB:</span>21/10/2004</div>
+                            <div><span class="text-accent-dark font-bold block">YEAR:</span>3rd IT</div>
+                            <div><span class="text-accent-dark font-bold block">CITY:</span>Kalwan</div>
+                            <div><span class="text-accent-dark font-bold block">STATE:</span>Nashik, MH</div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-dashed border-border-color">
+                            <p class="text-accent-dark font-bold text-sm">EMAIL:</p>
+                            <p class="font-mono text-xs bg-[#1a232f] p-2 rounded border border-accent-dark">jiteshdeshmukh6@gmail.com</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-text-secondary mt-6 font-mono">DATA INTEGRITY: 100% | STATUS: ACTIVE</p>
+                </div>
+
+                <!-- Status Report & Intro (REARRANGED NEATLY) -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- STATUS REPORT - NEW CLEAN GRID LAYOUT -->
+                    <div class="bg-gradient-to-r from-light-bg to-[#1a232f] p-8 border-2 border-accent-dark rounded-2xl system-card-shadow project-card">
+                        <h2 class="text-2xl font-bold mb-8 text-red-400 border-b-3 border-dashed border-red-500 pb-4 tracking-wider">:: STATUS REPORT</h2>
+                        <div class="status-grid gap-8">
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 p-4 bg-[#1a232f] rounded-xl border-l-4 border-accent-dark">
+                                    <span class="w-3 h-3 bg-accent-dark rounded-full"></span>
+                                    <div>
+                                        <p class="text-accent-dark font-bold text-sm">INSTITUTE</p>
+                                        <p class="font-mono text-lg">K.K. Wagh I.E.E.R.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3 p-4 bg-[#1a232f] rounded-xl border-l-4 border-accent-dark">
+                                    <span class="w-3 h-3 bg-accent-dark rounded-full"></span>
+                                    <div>
+                                        <p class="text-accent-dark font-bold text-sm">LOCATION</p>
+                                        <p class="font-mono text-lg">Nashik, Maharashtra</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 p-4 bg-[#1a232f] rounded-xl border-l-4 border-accent-dark">
+                                    <span class="w-3 h-3 bg-accent-dark rounded-full"></span>
+                                    <div>
+                                        <p class="text-accent-dark font-bold text-sm">BRANCH</p>
+                                        <p class="font-bold text-xl text-accent-dark font-mono">**INFORMATION TECHNOLOGY**</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3 p-4 bg-[#1a232f] rounded-xl border-l-4 border-accent-dark">
+                                    <span class="w-3 h-3 bg-accent-dark rounded-full"></span>
+                                    <div>
+                                        <p class="text-accent-dark font-bold text-sm">ENROLLMENT</p>
+                                        <p class="font-mono text-lg">**3rd Year**</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INTRODUCTION -->
+                    <div class="bg-light-bg p-8 border-2 border-border-color rounded-2xl system-card-shadow project-card">
+                        <h2 class="text-2xl font-bold mb-6 text-red-400 border-b-2 border-dashed border-red-500 pb-3 tracking-wider">:: INTRODUCTION</h2>
+                        <p class="text-lg leading-relaxed text-text-primary tracking-wide">
+                            Motivated **IT engineering student** with expertise in **full-stack development**, **3D graphics**, and **machine learning**. 
+                            Passionate about building **immersive experiences** and solving complex problems through innovative technology. 
+                            Actively seeking opportunities to contribute to cutting-edge projects and teams.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROJECTS TAB - NEW CARD FORMAT -->
+        <div id="projects-tab" class="tab-content hidden">
+            <div class="space-y-8">
+                <!-- Project 1 -->
+                <div class="project-card bg-gradient-to-br from-light-bg via-[#1a232f] to-light-bg p-8 border-2 border-accent-dark rounded-3xl system-card-shadow">
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <div class="flex-1 space-y-4">
+                            <h3 class="text-2xl font-bold text-red-400 tracking-wider border-b-2 border-dashed border-red-400 pb-2">RESEARCH_PAPER_MGMT_SYS</h3>
+                            <p class="text-text-primary leading-relaxed text-lg">
+                                Server-side rendered application for organizing, indexing, and accessing academic research papers. 
+                                Features secure upload, advanced search, and efficient knowledge management.
+                            </p>
+                            <div class="flex flex-wrap gap-3 pt-4 border-t border-dashed border-border-color">
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">Flask</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">Jinja2</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">PostgreSQL</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 w-full md:w-80">
+                            <img src="./assets/projects/research-paper.png" alt="Research Paper Management" class="project-image-large">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="project-card bg-gradient-to-br from-light-bg via-[#1a232f] to-light-bg p-8 border-2 border-accent-dark rounded-3xl system-card-shadow">
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <div class="flex-1 space-y-4">
+                            <h3 class="text-2xl font-bold text-red-400 tracking-wider border-b-2 border-dashed border-red-400 pb-2">AADHAR_CROWD_MGMT_SYS</h3>
+                            <p class="text-text-primary leading-relaxed text-lg">
+                                High-security biometric system using face & fingerprint recognition for real-time crowd control 
+                                and Aadhar-based identity verification.
+                            </p>
+                            <div class="flex flex-wrap gap-3 pt-4 border-t border-dashed border-border-color">
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">React</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">Flask</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">OpenCV</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">ML</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 w-full md:w-80">
+                            <img src="./assets/projects/aadhar-crowd.png" alt="Aadhar Crowd Management" class="project-image-large">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="project-card bg-gradient-to-br from-light-bg via-[#1a232f] to-light-bg p-8 border-2 border-accent-dark rounded-3xl system-card-shadow">
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <div class="flex-1 space-y-4">
+                            <h3 class="text-2xl font-bold text-red-400 tracking-wider border-b-2 border-dashed border-red-400 pb-2">ROAD_FOLIO (3D)</h3>
+                            <p class="text-text-primary leading-relaxed text-lg">
+                                Immersive 3D portfolio featuring interactive road environment with animated billboards 
+                                and smooth camera transitions.
+                            </p>
+                            <div class="flex flex-wrap gap-3 pt-4 border-t border-dashed border-border-color">
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">Three.js</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">React</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">GLTF</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 w-full md:w-80">
+                            <img src="./assets/projects/road-folio.png" alt="Road Folio 3D" class="project-image-large">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="project-card bg-gradient-to-br from-light-bg via-[#1a232f] to-light-bg p-8 border-2 border-accent-dark rounded-3xl system-card-shadow">
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <div class="flex-1 space-y-4">
+                            <h3 class="text-2xl font-bold text-red-400 tracking-wider border-b-2 border-dashed border-red-400 pb-2">AR_BUILDING_VISUALIZER</h3>
+                            <p class="text-text-primary leading-relaxed text-lg">
+                                Browser-based AR application using physical markers to render 3D building models 
+                                directly in the camera view.
+                            </p>
+                            <div class="flex flex-wrap gap-3 pt-4 border-t border-dashed border-border-color">
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">Three.js</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">AR.js</span>
+                                <span class="px-4 py-2 bg-accent-dark text-black font-bold rounded-full text-sm tracking-wide">WebGL</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 w-full md:w-80">
+                            <img src="./assets/projects/ar-building.png" alt="AR Building Visualizer" class="project-image-large">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKILLS TAB (UNCHANGED - PERFECT) -->
+        <div id="skills-tab" class="tab-content hidden">
+            <!-- [Previous skills code stays exactly the same - it's perfect] -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Technical Skills -->
+                <div class="skills-list-container bg-gradient-to-b from-light-bg to-[#1a232f] border-2 border-accent-dark rounded-2xl p-1 system-card-shadow">
+                    <h2 class="text-2xl font-bold text-red-400 p-6 border-b-2 border-accent-dark bg-lighter-bg rounded-t-2xl -mb-1">
+                        TECHNICAL SKILLS
+                    </h2>
+                    <ul class="text-base p-6 space-y-3">
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">CORE:</span> C++, Python, JavaScript, TypeScript
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">WEB:</span> React, Next.js, Flask, Django, TailwindCSS
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">3D/AR:</span> Three.js, WebGL, AR.js, Blender
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">DATA:</span> PostgreSQL, SQLite, MongoDB
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">TOOLS:</span> Git, Docker, Linux CLI, VS Code
+                        </li>
+                    </ul>
+                    <div class="p-6 text-sm text-center text-text-secondary italic border-t-2 border-dashed border-border-color bg-[#1a232f] rounded-b-2xl">
+                        STATUS: PRODUCTION READY | 95% MASTERY
+                    </div>
+                </div>
+
+                <!-- Soft Skills -->
+                <div class="skills-list-container bg-gradient-to-b from-light-bg to-[#1a232f] border-2 border-accent-dark rounded-2xl p-1 system-card-shadow">
+                    <h2 class="text-2xl font-bold text-red-400 p-6 border-b-2 border-accent-dark bg-lighter-bg rounded-t-2xl -mb-1">
+                        SOFT SKILLS
+                    </h2>
+                    <ul class="text-base p-6 space-y-3">
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">COMMUNICATION:</span> Clear & Concise
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">COLLABORATION:</span> Team Player
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">PROBLEM SOLVING:</span> Analytical Thinker
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">EXECUTION:</span> Deadline Driven
+                        </li>
+                        <li class="skill-item p-4 bg-light-bg rounded-lg border-l-4 border-accent-dark">
+                            <span class="text-accent-dark font-bold">ADAPTABILITY:</span> Quick Learner
+                        </li>
+                    </ul>
+                    <div class="p-6 text-sm text-center text-text-secondary italic border-t-2 border-dashed border-border-color bg-[#1a232f] rounded-b-2xl">
+                        STATUS: HUMAN OPTIMIZED | 100% RELIABLE
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="text-center text-sm pt-12 mt-12 border-t-2 border-dashed border-border-color text-text-secondary font-mono">
+            <p class="mb-2">[[ ACCESS CODE: IT-3YR-KKW-PORTFOLIO-2026 ]]</p>
+            <p>// END OF TRANSMISSION // SYSTEM ONLINE //</p>
+        </footer>
+    </div>
+
+    <!-- SAME JAVASCRIPT -->
+    <script>
+        // Live Clock
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-IN', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            }) + ' IST';
+            document.getElementById('current-time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Tab Functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tab = button.dataset.tab;
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                button.classList.add('active');
+                document.getElementById(tab + '-tab').classList.remove('hidden');
+            });
+        });
+
+        setTimeout(() => {
+            document.querySelector('.glitch').classList.remove('glitch');
+        }, 2000);
+    </script>
+</body>
+</html>
