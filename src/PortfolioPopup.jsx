@@ -41,7 +41,7 @@ const overlayStyle = {
 };
 
 const popupStyle = {
-    width: '60%',
+    width: '70%',
     height: '80%',
     backgroundColor: '#000',
     borderRadius: '20px',

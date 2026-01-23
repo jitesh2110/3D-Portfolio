@@ -20,16 +20,26 @@ const App = () => {
     const billboard1Ref = useRef(null);
     const billboard2Ref = useRef(null);
     const billboard3Ref = useRef(null);
+    const audioPenguinRef = useRef(null);
+    const penguinMixerRef = useRef(null);
     const raycasterRef = useRef(new THREE.Raycaster());
     const pointerRef = useRef(new THREE.Vector2());
     const signboardMeshesRef = useRef([]);
     const soundRef = useRef(null);
     const audioStartedRef = useRef(false);
     const hoveredSignRef = useRef(null);
+    
 
     // NEW REF for 2dfolio button
     const [showPortfolioPopup, setShowPortfolioPopup] = useState(false);
     const portfolioButtonRef = useRef(null);
+    const show2DFolioRef = useRef(false);
+    const [show2DFolioButton, setShow2DFolioButton] = useState(false);
+
+    //loading screen states
+    const [isLoading, setIsLoading] = useState(true);
+    const [isReady, setIsReady] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
 
     // Scene State Constants
     const START_CAMERA_POSITION = new THREE.Vector3(-130, 35, 210);
@@ -51,6 +61,7 @@ const App = () => {
     const SNOWFALL_PATH = './snowfall.glb';
     const SNOWTREE1_PATH = './snowtree1.glb';
     const SNOWTREE2_PATH = './snowtree2.glb';
+    const AUDIO_PENGUIN_PATH = './audio_penguin.glb';
 
     // Refs for DOM elements
     const canvasRef = useRef(null);
@@ -69,6 +80,24 @@ const App = () => {
         }
     };
 
+    const startScene = () => {
+    setHasStarted(true);
+
+    // Start animation loop
+    animate();
+
+    // Unlock audio (browser policy)
+    if (soundRef.current && !audioStartedRef.current) {
+        const context = THREE.AudioContext.getContext();
+        if (context.state === 'suspended') {
+            context.resume();
+        }
+        soundRef.current.play();
+        audioStartedRef.current = true;
+    }
+};
+
+
     const togglePortfolioPopup = () => {
         setShowPortfolioPopup(!showPortfolioPopup);
     }
@@ -86,36 +115,31 @@ const App = () => {
     };
 
     const handleHover = () => {
-        if (!cameraRef.current || signboardMeshesRef.current.length === 0) return;
+    if (!cameraRef.current || signboardMeshesRef.current.length === 0) return;
 
-        raycasterRef.current.setFromCamera(pointerRef.current, cameraRef.current);
-        
-        // We only check for intersections with the interactive meshes on the signboard
-        const intersects = raycasterRef.current.intersectObjects(signboardMeshesRef.current, true);
+    raycasterRef.current.setFromCamera(pointerRef.current, cameraRef.current);
+    const intersects = raycasterRef.current.intersectObjects(signboardMeshesRef.current, true);
 
-        if (intersects.length > 0) {
-            const obj = intersects[0].object;
+    if (intersects.length > 0) {
+        const obj = intersects[0].object;
 
-            if (hoveredSignRef.current !== obj) {
-                // Reset previous hover
-                if (hoveredSignRef.current) {
-                    new TWEEN.Tween(hoveredSignRef.current.scale)
-                        .to({ x: 1, y: 1, z: 1 }, 200)
-                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .start();
-                }
-
-                // Set new hover scale on the specific mesh (Poster/Text)
-                hoveredSignRef.current = obj;
-                new TWEEN.Tween(obj.scale)
-                    .to({ x: 1.2, y: 1.2, z: 1.2 }, 300) // Scale up the individual plate
-                    .easing(TWEEN.Easing.Back.Out)
+        // Original signboard logic
+        if (hoveredSignRef.current !== obj) {
+            if (hoveredSignRef.current) {
+                new TWEEN.Tween(hoveredSignRef.current.scale)
+                    .to({ x: 1, y: 1, z: 1 }, 200)
+                    .easing(TWEEN.Easing.Quadratic.Out)
                     .start();
-                
-                document.body.style.cursor = 'pointer';
             }
-        } else {
-        // Reset if mouse is not over any interactive signboard mesh
+            hoveredSignRef.current = obj;
+            new TWEEN.Tween(obj.scale)
+                .to({ x: 1.2, y: 1.2, z: 1.2 }, 300)
+                .easing(TWEEN.Easing.Back.Out)
+                .start();
+            document.body.style.cursor = 'pointer';
+        }
+    } else {
+        
         if (hoveredSignRef.current) {
             new TWEEN.Tween(hoveredSignRef.current.scale)
                 .to({ x: 1, y: 1, z: 1 }, 200)
@@ -124,8 +148,26 @@ const App = () => {
             hoveredSignRef.current = null;
             document.body.style.cursor = 'default';
         }
-        }
-    };
+    }
+};
+
+
+    // 🔥 NEW: Toggle BGM on penguin click
+const togglePenguinAudio = () => {
+    if (!soundRef.current) {
+        console.warn("Audio not loaded yet");
+        return;
+    }
+
+    if (soundRef.current.isPlaying) {
+        soundRef.current.pause();
+        console.log("🔇 BGM Paused (Penguin clicked)");
+    } else {
+        soundRef.current.play();
+        console.log("🔊 BGM Playing (Penguin clicked)");
+    }
+};
+
 
     const setupAudio = (camera) => {
     // 1. Create an AudioListener and add it to the camera
@@ -181,7 +223,7 @@ const App = () => {
         if (starFieldRef.current) return;
 
         const starsGeometry = new THREE.BufferGeometry();
-        const starsCount = 5000;
+        const starsCount = 2000;
         const positions = [];
 
         for (let i = 0; i < starsCount; i++) {
@@ -370,8 +412,8 @@ const App = () => {
     };
 
     const onDocumentClick = useCallback((event) => {
-        // 1. Handle Audio Autoplay unlocking
-        if (!audioStartedRef.current && soundRef.current) {
+    // 1. Handle Audio Autoplay unlocking (KEEP EXISTING)
+    if (!audioStartedRef.current && soundRef.current) {
         const context = THREE.AudioContext.getContext();
         if (context.state === 'suspended') {
             context.resume();
@@ -379,37 +421,45 @@ const App = () => {
         soundRef.current.play();
         audioStartedRef.current = true;
         console.log("Audio started by user gesture");
-        }
+    }
 
-        if (!controlsRef.current?.enabled) return;
-        
-        pointerRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-        pointerRef.current.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    if (!controlsRef.current?.enabled) return;
+    
+    pointerRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointerRef.current.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-        raycasterRef.current.setFromCamera(pointerRef.current, cameraRef.current);
-        const intersects = raycasterRef.current.intersectObjects(signboardMeshesRef.current, true);
+    raycasterRef.current.setFromCamera(pointerRef.current, cameraRef.current);
+    const intersects = raycasterRef.current.intersectObjects(signboardMeshesRef.current, true);
 
-        if (intersects.length > 0) {
+    if (intersects.length > 0) {
         event.stopPropagation();
         const clickedObj = intersects[0].object;
 
+        // 🔥 PENGUIN CLICK (invisible box OR real penguin)
+        if (clickedObj.userData.isPenguin || clickedObj.userData.isClickCollider) {
+        console.log("🐧 PENGUIN AREA CLICKED! Toggling audio...");
+        togglePenguinAudio();
+        return;
+        }
+
+        // YOUR EXISTING CODE (keep unchanged)
         if (clickedObj.userData.targetBillboard) {
             moveCameraToBillboard(clickedObj.userData.targetBillboard);
         }
         else if (clickedObj.userData.externalUrl) {
             const url = clickedObj.userData.externalUrl;
-            
             if (clickedObj.userData.isDownload) {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'Jitesh_Deshmukh_Resume.pdf';
-            link.click();
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'Jitesh_Deshmukh_Resume.pdf';
+                link.click();
             } else {
-            window.open(url, '_blank');
+                window.open(url, '_blank');
             }
         }
-        }
-    }, []);
+    }
+}, []);
+
 
     const moveCameraToBillboard = (targetBillboard) => {
         const EYE_LEVEL_OFFSET = 4.0; 
@@ -448,14 +498,18 @@ const App = () => {
             controlsRef.current.update(); 
             })
             .onComplete(() => {
-            controlsRef.current.minDistance = 5;
-            controlsRef.current.maxDistance = 7;
+            controlsRef.current.minDistance = 4;
+            controlsRef.current.maxDistance = 5;
             controlsRef.current.maxPolarAngle = Math.PI / 1.9; 
             controlsRef.current.enabled = true; 
             
             if (backButtonRef.current) {
                 backButtonRef.current.style.display = 'block';
             }
+
+            setShow2DFolioButton(true);
+
+
             console.log("Entered Billboard Focus Mode.");
             })
             .start();
@@ -480,6 +534,11 @@ const App = () => {
             controlsRef.current.update();
             })
             .onComplete(() => {
+
+            setShow2DFolioButton(false);
+            setShowPortfolioPopup(false);
+
+
             controlsRef.current.minDistance = MIN_SCENE_DISTANCE;
             controlsRef.current.maxDistance = MAX_SCENE_DISTANCE;
             cameraRef.current.position.copy(START_CAMERA_POSITION);
@@ -501,22 +560,31 @@ const App = () => {
     };
 
     const animate = () => {
-        requestAnimationFrame(animate);
-        handleHover();
-        const delta = clockRef.current.getDelta();
-        if (snowfallMixerRef.current) {
+    requestAnimationFrame(animate);
+    handleHover();
+    const delta = clockRef.current.getDelta();
+    
+    // ✅ SAFE SNOWFALL
+    if (snowfallMixerRef.current?.update) {
         snowfallMixerRef.current.update(delta);
-        }
-        
-        TWEEN.update(); 
+    }
+    
+    // ✅ SAFE PENGUIN (THIS FIXES THE CRASH)
+    if (penguinMixerRef.current?.update) {
+        penguinMixerRef.current.update(delta);
+    }
+    
+    TWEEN.update();
 
-        if (controlsRef.current) {
+    if (controlsRef.current) {
         controlsRef.current.update();
-        }
-        if (rendererRef.current && sceneRef.current && cameraRef.current) {
+    }
+    if (rendererRef.current && sceneRef.current && cameraRef.current) {
         rendererRef.current.render(sceneRef.current, cameraRef.current);
-        }
-    };
+    }
+};
+ 
+    
 
     // --- Main init function (exactly same as original) ---
     const init = async () => {
@@ -540,7 +608,10 @@ const App = () => {
         antialias: true 
         });
         rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-        rendererRef.current.setPixelRatio(window.devicePixelRatio);
+        rendererRef.current.setPixelRatio(
+            Math.min(window.devicePixelRatio, 1.5)
+        );
+
         rendererRef.current.toneMapping = THREE.ACESFilmicToneMapping;
         rendererRef.current.toneMappingExposure = 1.0; 
         rendererRef.current.shadowMap.enabled = false; 
@@ -566,7 +637,7 @@ const App = () => {
         const fadeTexture = createRadialFadeTexture();
 
         const material = new THREE.MeshBasicMaterial({
-        color: 0xeeeeee,
+        color: 0xbfdbf7,
         transparent: true,
         alphaMap: fadeTexture,
         side: THREE.DoubleSide
@@ -666,6 +737,7 @@ const App = () => {
             }
         }
         });
+
         
         const SNOWTREE_SCALE = 0.8;
         const snowTree1GLTF = await loadModel(SNOWTREE1_PATH);
@@ -684,11 +756,55 @@ const App = () => {
         enableClipping(snowTree2); 
         sceneRef.current.add(snowTree2);
 
+        // Add Audio Penguin (place after snowTree2)
+        const audioPenguinGLTF = await loadModel(AUDIO_PENGUIN_PATH);
+        const audioPenguin = audioPenguinGLTF.scene;
+        audioPenguinRef.current = audioPenguin;
+        audioPenguin.scale.set(0.005, 0.005, 0.005); // Adjust scale as needed
+        audioPenguin.position.set(-25, 0.1, 20); // Position near skills billboard
+        audioPenguin.rotation.y = -Math.PI / 6; // Face towards center
+        enableClipping(audioPenguin); 
+        sceneRef.current.add(audioPenguin);
+
+        // 🔥 INVISIBLE CLICK BOX (10x bigger than penguin)
+        const clickBox = new THREE.Mesh(
+            new THREE.BoxGeometry(1.8, 1.8, 1.8), // Big invisible box around penguin
+            new THREE.MeshBasicMaterial({ 
+            transparent: true, 
+            opacity: 0, // INVISIBLE
+            visible: false // Won't render
+          })
+        );
+        clickBox.position.copy(audioPenguin.position);
+        clickBox.position.y += 1; // Center on penguin
+        clickBox.userData.isPenguin = true;
+        clickBox.userData.isClickCollider = true;
+        signboardMeshesRef.current.push(clickBox);
+        sceneRef.current.add(clickBox);
+
+        if (audioPenguinGLTF.animations && audioPenguinGLTF.animations.length > 0) {
+            penguinMixerRef.current = new THREE.AnimationMixer(audioPenguinRef.current);
+            const action = penguinMixerRef.current.clipAction(audioPenguinGLTF.animations[0]);
+            action.loop = THREE.LoopRepeat;
+            action.play();
+            console.log("✅ Penguin animation started!"); // Debug
+        } else {
+            console.warn("⚠️ No animations found in penguin model");
+        }
+
+        audioPenguin.traverse((child) => {
+           if (child.isMesh) {
+                child.userData.isPenguin = true;  // Mark all penguin parts
+               signboardMeshesRef.current.push(child);  // Add to CLICK list
+           }
+        });
+
         const snowfallGLTF = await loadModel(SNOWFALL_PATH);
         const snowfall = snowfallGLTF.scene;
         snowfall.scale.set(8, 8, 8);
         snowfall.position.set(0, 0.3, 0);
         sceneRef.current.add(snowfall);
+
         
         if (snowfallGLTF.animations && snowfallGLTF.animations.length) {
         snowfallMixerRef.current = new THREE.AnimationMixer(snowfall);
@@ -702,21 +818,13 @@ const App = () => {
         setupDayEnvironment();
 
         // Event listeners
-        if (toggleButtonRef.current) {
-        toggleButtonRef.current.addEventListener('click', toggleEnvironment);
-        }
-        // NEW EVENT LISTENER: Add 2dfolio button click handler
-       if (portfolioButtonRef.current) {
-            portfolioButtonRef.current.addEventListener('click', togglePortfolioPopup);
-        }
+        
         window.addEventListener('resize', onWindowResize, false);
         window.addEventListener('click', onDocumentClick); 
         
-        if (backButtonRef.current) {
-        backButtonRef.current.addEventListener('click', returnToStartScene);
-        }
+        setIsLoading(false);
+        setIsReady(true);
 
-        animate();
     };
 
     // --- useEffect for initialization ---
@@ -729,69 +837,135 @@ const App = () => {
         window.removeEventListener('mousemove', onMouseMove); // Clean up
         window.removeEventListener('resize', onWindowResize);
         window.removeEventListener('click', onDocumentClick);
-        // NEW CLEANUP: Remove portfolio button event listener
-       if (portfolioButtonRef.current) {
-                portfolioButtonRef.current.removeEventListener('click', togglePortfolioPopup);
-            }
+       
         };
     }, []);
 
     return (
-        <>
-            {/* ALL YOUR ORIGINAL BUTTONS */}
-            <button ref={toggleButtonRef} id="toggle-button">
-                Switch to Night 🌙
-            </button>
-            
-            <button ref={backButtonRef} id="back-button">
-                Back to Scene ⬅️
-            </button>
+  <>
+    {/* ================= LOADING SCREEN ================= */}
+    {isLoading && (
+      <div style={loadingStyle}>
+        <h1>Loading Scene...</h1>
+        <p>Please wait ⏳</p>
+      </div>
+    )}
 
-            {/* 2DFOLIO BUTTON (unchanged) */}
-            <button 
-                ref={portfolioButtonRef}
-                id="portfolio-button"
-                style={{
-                    position: 'fixed',
-                    bottom: '30px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    zIndex: 1000,
-                    padding: '12px 24px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '25px',
-                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px'
-                }}
-                // ... (hover styles unchanged)
-            >
-                2Dfolio
-            </button>
+    {/* ================= START SCREEN ================= */}
+    {!isLoading && isReady && !hasStarted && (
+      <div style={loadingStyle}>
+        <h1>Click start to enter you 3D world</h1>
+       
+        <button onClick={startScene} style={startButtonStyle}>
+          START
+        </button>
+      </div>
+    )}
 
-            {/* 👇 SIMPLIFIED: Just use the component! */}
-            <PortfolioPopup 
-                isOpen={showPortfolioPopup} 
-                onClose={() => setShowPortfolioPopup(false)} 
-            />
+    {/* ================= UI BUTTONS (VISIBLE AFTER START) ================= */}
+    {hasStarted && (
+      <>
+        {/* Day / Night Toggle */}
+        <button
+           ref={toggleButtonRef}
+           id="toggle-button"
+           onClick={toggleEnvironment}
+        >
+          Switch to Night 🌙
+        </button>
 
-            <canvas ref={canvasRef} />
-            
-            {/* Animation CSS */}
-            <style jsx>{`
-                @keyframes popupEntrance {
-                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7) rotateY(-90deg); }
-                    100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotateY(0deg); }
-                }
-            `}</style>
-        </>
-    );
+        {/* Back Button */}
+        <button
+            ref={backButtonRef}
+            id="back-button"
+            onClick={returnToStartScene}
+        >
+         Back to Scene ⬅️
+        </button>
+
+        {/* 2DFOLIO BUTTON */}
+        {show2DFolioButton && (
+          <button
+            id="portfolio-button"
+            onClick={() => setShowPortfolioPopup(true)}
+            style={{
+              position: 'fixed',
+              bottom: '30px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1000,
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              background: 'linear-gradient(45deg, #667eea, #764ba2)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '25px',
+              cursor: 'pointer'
+            }}
+          >
+            2Dfolio ✨
+          </button>
+        )}
+
+        {/* Portfolio Popup */}
+        <PortfolioPopup
+          isOpen={showPortfolioPopup}
+          onClose={() => setShowPortfolioPopup(false)}
+        />
+      </>
+    )}
+
+    {/* ================= THREE.JS CANVAS ================= */}
+    <canvas
+      ref={canvasRef}
+      style={{
+        display: hasStarted ? 'block' : 'none'
+      }}
+    />
+
+    {/* ================= CSS ANIMATION ================= */}
+    <style jsx>{`
+      @keyframes popupEntrance {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.7) rotateY(-90deg);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+        }
+      }
+    `}</style>
+  </>);};
+
+
+const loadingStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
+  color: 'white',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9999,
+  textAlign: 'center'
+};
+
+const startButtonStyle = {
+  marginTop: '20px',
+  padding: '14px 32px',
+  fontSize: '18px',
+  fontWeight: 'bold',
+  borderRadius: '30px',
+  border: 'none',
+  cursor: 'pointer',
+  background: 'linear-gradient(45deg, #ff512f, #dd2476)',
+  color: 'white'
 };
 
 export default App;
