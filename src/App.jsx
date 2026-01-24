@@ -3,7 +3,7 @@ import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
 import { GLTFLoader } from 'https://unpkg.com/three@0.159.0/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
 import * as TWEEN from 'https://cdnjs.cloudflare.com/ajax/libs/tween.js/21.0.0/tween.esm.min.js';
-
+import "./App.css"
 import PortfolioPopup from './PortfolioPopup';
 
 const App = () => {
@@ -365,7 +365,7 @@ const togglePenguinAudio = () => {
     }
 
     if (toggleButtonRef.current) {
-        toggleButtonRef.current.textContent = 'Switch to Night 🌙';
+        toggleButtonRef.current.textContent = 'NIGHT';
     }
     isDayRef.current = true;
     console.log('Switched to Day - ALL LIGHTS OFF');
@@ -397,7 +397,7 @@ const togglePenguinAudio = () => {
         }
 
         if (toggleButtonRef.current) {
-        toggleButtonRef.current.textContent = 'Switch to Day ☀️';
+        toggleButtonRef.current.textContent = 'DAY';
         }
         isDayRef.current = false;
         console.log('Switched to Night');
@@ -843,78 +843,68 @@ const togglePenguinAudio = () => {
 
     return (
   <>
-    {/* ================= LOADING SCREEN ================= */}
     {isLoading && (
-      <div style={loadingStyle}>
-        <h1>Loading Scene...</h1>
-        <p>Please wait ⏳</p>
-      </div>
+  <div className="cyber-loader">
+    <div className="loader-spinner"></div>
+    <div className="system-text">SYSTEM BOOT</div>
+  </div>
+)}
+
+{!isLoading && isReady && !hasStarted && (
+  <div className="cyber-loader">
+    <div className="loader-spinner"></div>
+    <div className="system-text">3D WORLD READY</div>
+    <button className="cyber-btn" onClick={startScene}>
+      ENTER SCENE
+    </button>
+  </div>
+)}
+
+    {/* ================= CYBERPUNK UI BUTTONS ================= */}
+{hasStarted && (
+  <>
+    {/* TOP-LEFT RETURN BUTTON */}
+    <div className="return-btn-pos">
+      <button 
+        ref={backButtonRef} 
+        className="cyber-btn" 
+        id="back-button"
+        onClick={returnToStartScene}
+        style={{ display: 'none' }}
+      >
+        RETURN
+      </button>
+    </div>
+
+    {/* TOP-RIGHT HUD PANEL */}
+    <div className="hud-panel">
+      <button
+        ref={toggleButtonRef}
+        className="cyber-btn secondary"
+        id="toggle-button"
+        onClick={toggleEnvironment}
+      > NIGHT MODE
+      </button>
+    </div>
+
+    {/* BOTTOM CENTER 2D PORTFOLIO BUTTON */}
+    {show2DFolioButton && (
+      <button
+        id="portfolio-button"
+        className="cyber-btn"
+        onClick={() => setShowPortfolioPopup(true)}
+      >
+        2DFOLIO
+      </button>
     )}
 
-    {/* ================= START SCREEN ================= */}
-    {!isLoading && isReady && !hasStarted && (
-      <div style={loadingStyle}>
-        <h1>Click start to enter you 3D world</h1>
-       
-        <button onClick={startScene} style={startButtonStyle}>
-          START
-        </button>
-      </div>
-    )}
-
-    {/* ================= UI BUTTONS (VISIBLE AFTER START) ================= */}
-    {hasStarted && (
-      <>
-        {/* Day / Night Toggle */}
-        <button
-           ref={toggleButtonRef}
-           id="toggle-button"
-           onClick={toggleEnvironment}
-        >
-          Switch to Night 🌙
-        </button>
-
-        {/* Back Button */}
-        <button
-            ref={backButtonRef}
-            id="back-button"
-            onClick={returnToStartScene}
-        >
-         Back to Scene ⬅️
-        </button>
-
-        {/* 2DFOLIO BUTTON */}
-        {show2DFolioButton && (
-          <button
-            id="portfolio-button"
-            onClick={() => setShowPortfolioPopup(true)}
-            style={{
-              position: 'fixed',
-              bottom: '30px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 1000,
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(45deg, #667eea, #764ba2)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '25px',
-              cursor: 'pointer'
-            }}
-          >
-            2Dfolio ✨
-          </button>
-        )}
-
-        {/* Portfolio Popup */}
-        <PortfolioPopup
-          isOpen={showPortfolioPopup}
-          onClose={() => setShowPortfolioPopup(false)}
-        />
-      </>
-    )}
+    {/* Portfolio Popup */}
+    <PortfolioPopup
+      isOpen={showPortfolioPopup}
+      onClose={() => setShowPortfolioPopup(false)}
+    />
+  </>
+)}
 
     {/* ================= THREE.JS CANVAS ================= */}
     <canvas

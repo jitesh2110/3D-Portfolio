@@ -1,42 +1,162 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ================= COMPLETE UPDATED CYBERPUNK CSS ================= */
+
+/* ================= BODY & ROOT FIX ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+body, #root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* ================= LARGER CYBERPUNK BUTTONS ================= */
+.cyber-btn {
+  position: relative;
+  padding: 12px 24px;        /* LARGER: 8px→12px, 16px→24px */
+  font-size: 14px;           /* LARGER: 12px→14px */
+  font-weight: 700;          /* BOLDER */
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background: linear-gradient(45deg, #00ff88, #00ccff);  /* FRESH GREEN-CYAN */
+  border: 2px solid rgba(0, 255, 136, 0.5);              /* BRIGHTER BORDER */
+  border-radius: 10px;                                   /* SOFTER CORNERS */
+  color: #000;                                           /* DARK TEXT */
+  cursor: pointer;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.6),                    /* BRIGHTER GLOW */
+    inset 0 0 20px rgba(0, 204, 255, 0.3);
+  transition: all 0.3s ease;
+  min-width: 120px;            /* LARGER: 80px→120px */
+  height: 48px;                /* LARGER: 36px→48px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', 'Courier New', monospace;     /* CYBER FONT */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.cyber-btn:hover {
+  box-shadow: 
+    0 0 40px rgba(0, 255, 136, 0.9),
+    inset 0 0 30px rgba(0, 204, 255, 0.5);
+  transform: translateY(-4px) scale(1.05);
 }
 
-.card {
-  padding: 2em;
+.cyber-btn:active {
+  transform: translateY(-2px) scale(1.02);
 }
 
-.read-the-docs {
-  color: #888;
+.cyber-btn.secondary {
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);  /* WARM ORANGE-YELLOW */
+  border-color: rgba(255, 107, 107, 0.5);
+  box-shadow: 
+    0 0 20px rgba(255, 107, 107, 0.6),
+    inset 0 0 20px rgba(255, 217, 61, 0.3);
+  color: #000;
+}
+
+.cyber-btn.secondary:hover {
+  box-shadow: 
+    0 0 40px rgba(255, 107, 107, 0.9),
+    inset 0 0 30px rgba(255, 217, 61, 0.5);
+}
+
+/* ================= BUTTON POSITIONS ================= */
+.return-btn-pos {
+  position: fixed;
+  top: 25px;
+  left: 25px;
+  z-index: 1000;
+}
+
+.hud-panel {
+  position: fixed;
+  top: 25px;
+  right: 25px;
+  z-index: 1000;
+}
+
+#portfolio-button {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+/* ================= CYBERPUNK LOADERS (UNCHANGED) ================= */
+.cyber-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(ellipse at center, #0a0a0a 0%, #000 70%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+
+.loader-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(0, 212, 255, 0.2);
+  border-top: 3px solid #00d4ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.system-text {
+  color: #00d4ff;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+  margin-top: 20px;
+  animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+/* ================= CRT SCANLINES ================= */
+canvas::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+  background-image: 
+    linear-gradient(rgba(18,16,16,0.1) 50%, rgba(0,0,0,0.25) 50%),
+    linear-gradient(90deg, transparent 99%, rgba(255,255,255,0.03) 100%);
+  background-size: 100% 4px, 20px 100%;
+  animation: scanline 0.5s linear infinite;
+}
+
+@keyframes scanline {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 100%, 0 0; }
 }
