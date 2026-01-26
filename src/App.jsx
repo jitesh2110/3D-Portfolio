@@ -114,6 +114,30 @@ const App = () => {
         // Replace with your actual 2D portfolio URL
     };
 
+    // 🔥 NEW: Setup emissive materials for billboards (REPLACES SPOTLIGHTS)
+const setupEmissiveMaterials = (billboard, isNight = false) => {
+    const DAY_EMISSIVE = 0x444444;  // Subtle day glow
+    const NIGHT_EMISSIVE = 0x88aaff; // Bright night glow
+    const EMISSIVE_INTENSITY = isNight ? 2.0 : 0.3;
+    
+    billboard.traverse((child) => {
+        if (child.name === 'Object_4') {
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            
+            materials.forEach(material => {
+                // Skip text/UI elements
+                if (!child.name.includes('text') && !child.name.includes('Text')) {
+                    material.emissive = new THREE.Color(isNight ? NIGHT_EMISSIVE : DAY_EMISSIVE);
+                    material.emissiveIntensity = EMISSIVE_INTENSITY;
+                    material.emissiveMap = material.map || material.emissiveMap;
+                    material.needsUpdate = true;
+                }
+            });
+        }
+    });
+};
+
+
     const handleHover = () => {
     if (!cameraRef.current || signboardMeshesRef.current.length === 0) return;
 
@@ -251,31 +275,7 @@ const togglePenguinAudio = () => {
         sceneRef.current.add(starFieldRef.current);
     };
 
-    const attachLightsToBillboard = (billboard, lightOffset) => {
-        const LIGHT_COLOR = 0xffffff; 
-        const INTENSITY = 30; 
-        const DISTANCE = 50; 
-        const ANGLE = Math.PI / 2.5; 
-        const PENUMBRA = 0.8; 
-
-        const spotLight = new THREE.SpotLight(LIGHT_COLOR, INTENSITY, DISTANCE, ANGLE, PENUMBRA);
-        spotLight.position.copy(lightOffset);
-        
-        const target = new THREE.Object3D();
-        target.position.set(0,3,0); 
-        spotLight.target = target;
-        
-        spotLight.castShadow = false; 
-        
-        spotLight.userData.isBillboardLight = true;
-        if (!sceneRef.current.userData.billboardLights) {
-        sceneRef.current.userData.billboardLights = [];
-        }
-        sceneRef.current.userData.billboardLights.push(spotLight);
-
-        billboard.add(spotLight);
-        billboard.add(target);
-    };
+    
 
     const attachPointLightsToLamps = (model) => {
         const LAMP_COLOR = 0xffc385; 
@@ -329,15 +329,9 @@ const togglePenguinAudio = () => {
         });
     };
 
-    const toggleBillboardLights = (visible) => {
-        if (sceneRef.current.userData.billboardLights) {
-        sceneRef.current.userData.billboardLights.forEach(light => {
-            light.visible = visible;
-        });
-        }
-    };
 
-    const setupDayEnvironment = () => {
+    // ✅ NEW: Simplified day environment
+const setupDayEnvironment = () => {
     sceneRef.current.background = DAY_COLOR;
     sceneRef.current.fog = new THREE.Fog(DAY_COLOR, 20, 100);
     
@@ -353,55 +347,60 @@ const togglePenguinAudio = () => {
         starFieldRef.current.visible = false;
     }
 
-    // ✅ FIX: Turn OFF ALL lights in DAY mode
-    toggleBillboardLights(false);
+    // 🔥 NEW: Update billboards to DAY emissive
+    [billboard1Ref.current, billboard2Ref.current, billboard3Ref.current].forEach(billboard => {
+        if (billboard) setupEmissiveMaterials(billboard, false);
+    });
+
     if (sceneRef.current.userData.lampLights) {
         sceneRef.current.userData.lampLights.forEach(light => {
-        light.visible = false;
+            light.visible = false;
         });
-    }
-    else {
-      console.log("fuction not workin g");
     }
 
     if (toggleButtonRef.current) {
         toggleButtonRef.current.textContent = 'NIGHT';
     }
     isDayRef.current = true;
-    console.log('Switched to Day - ALL LIGHTS OFF');
+    console.log('Switched to Day - Emissive materials updated');
 };
 
-    const setupNightEnvironment = () => {
-        sceneRef.current.background = NIGHT_COLOR;
-        sceneRef.current.fog = new THREE.Fog(NIGHT_COLOR, 30, 120);
+    // ✅ NEW: Simplified night environment  
+const setupNightEnvironment = () => {
+    sceneRef.current.background = NIGHT_COLOR;
+    sceneRef.current.fog = new THREE.Fog(NIGHT_COLOR, 30, 120);
 
-        const ambientLight = sceneRef.current.getObjectByName('AmbientLight');
-        ambientLight.intensity = 0.5; 
+    const ambientLight = sceneRef.current.getObjectByName('AmbientLight');
+    ambientLight.intensity = 0.5; 
 
-        const directionalLight = sceneRef.current.getObjectByName('DirectionalLight');
-        directionalLight.color.set(0xaabbff);
-        directionalLight.intensity = 0.2;
-        directionalLight.position.set(10, 30, 20);
+    const directionalLight = sceneRef.current.getObjectByName('DirectionalLight');
+    directionalLight.color.set(0xaabbff);
+    directionalLight.intensity = 0.2;
+    directionalLight.position.set(10, 30, 20);
 
-        if (!starFieldRef.current) {
+    if (!starFieldRef.current) {
         addStars();
-        }
-        starFieldRef.current.visible = true;
+    }
+    starFieldRef.current.visible = true;
 
-        toggleBillboardLights(true);
+    // 🔥 NEW: Update billboards to NIGHT emissive
+    [billboard1Ref.current, billboard2Ref.current, billboard3Ref.current].forEach(billboard => {
+        if (billboard) setupEmissiveMaterials(billboard, true);
+    });
 
-        if (sceneRef.current.userData.lampLights) {
+    if (sceneRef.current.userData.lampLights) {
         sceneRef.current.userData.lampLights.forEach(light => {
             light.visible = true;
         });
-        }
+    }
 
-        if (toggleButtonRef.current) {
+    if (toggleButtonRef.current) {
         toggleButtonRef.current.textContent = 'DAY';
-        }
-        isDayRef.current = false;
-        console.log('Switched to Night');
-    };
+    }
+    isDayRef.current = false;
+    console.log('Switched to Night - Emissive materials updated');
+};
+
 
     const toggleEnvironment = () => {
         if (isDayRef.current) {
@@ -591,7 +590,6 @@ const togglePenguinAudio = () => {
         // 1. Scene setup
         sceneRef.current = new THREE.Scene();
         sceneRef.current.userData.lampLights = [];
-        sceneRef.current.userData.billboardLights = [];
         
         // 2. Camera setup
         const aspectRatio = window.innerWidth / window.innerHeight;
@@ -670,36 +668,34 @@ const togglePenguinAudio = () => {
         
         const BILLBOARD_SCALE = 0.5;
         
-        const billboard_aboutme = await loadModel(BILLBOARD_PATH_ABOUTME);
-        billboard1Ref.current = billboard_aboutme.scene;
-        billboard1Ref.current.scale.set(BILLBOARD_SCALE, BILLBOARD_SCALE, BILLBOARD_SCALE);
-        billboard1Ref.current.position.set(5, 0.1, 20);
-        billboard1Ref.current.rotation.y = -Math.PI / 1.2;
-        
-        const billboard_projects = await loadModel(BILLBOARD_PATH_PROJECTS);
-        billboard2Ref.current = billboard_projects.scene;
-        billboard2Ref.current.scale.set(BILLBOARD_SCALE, BILLBOARD_SCALE, BILLBOARD_SCALE);
-        billboard2Ref.current.position.set(-7, 0.1, -6);
-        billboard2Ref.current.rotation.y = Math.PI / 0.65;
+        // NEW CODE (billboards WITHOUT spotlights):
+const billboard_aboutme = await loadModel(BILLBOARD_PATH_ABOUTME);
+billboard1Ref.current = billboard_aboutme.scene;
+billboard1Ref.current.scale.set(BILLBOARD_SCALE, BILLBOARD_SCALE, BILLBOARD_SCALE);
+billboard1Ref.current.position.set(5, 0.1, 20);
+billboard1Ref.current.rotation.y = -Math.PI / 1.2;
+// 🔥 ADD EMISSIVE MATERIALS
+setupEmissiveMaterials(billboard1Ref.current, false);
 
-        const billboard_skills = await loadModel(BILLBOARD_PATH_SKILLS);
-        billboard3Ref.current = billboard_skills.scene;
-        billboard3Ref.current.scale.set(BILLBOARD_SCALE, BILLBOARD_SCALE, BILLBOARD_SCALE);
-        billboard3Ref.current.position.set(18, 0.1, -30);
-        billboard3Ref.current.rotation.y = Math.PI / 0.85;
-        
-        [billboard1Ref.current, billboard2Ref.current, billboard3Ref.current].forEach(billboard => {
-        enableClipping(billboard); 
-        sceneRef.current.add(billboard);
-        });
+const billboard_projects = await loadModel(BILLBOARD_PATH_PROJECTS);
+billboard2Ref.current = billboard_projects.scene;
+billboard2Ref.current.scale.set(BILLBOARD_SCALE, BILLBOARD_SCALE, BILLBOARD_SCALE);
+billboard2Ref.current.position.set(-7, 0.1, -6);
+billboard2Ref.current.rotation.y = Math.PI / 0.65;
+setupEmissiveMaterials(billboard2Ref.current, false);
 
-        const lightOffset1 = new THREE.Vector3(10, 10, 2); 
-        const lightOffset2 = new THREE.Vector3(10, 10, 2); 
-        const lightOffset3 = new THREE.Vector3(10, 10, 2); 
+const billboard_skills = await loadModel(BILLBOARD_PATH_SKILLS);
+billboard3Ref.current = billboard_skills.scene;
+billboard3Ref.current.scale.set(BILLBOARD_SCALE, BILLBOARD_SCALE, BILLBOARD_SCALE);
+billboard3Ref.current.position.set(18, 0.1, -30);
+billboard3Ref.current.rotation.y = Math.PI / 0.85;
+setupEmissiveMaterials(billboard3Ref.current, false);
 
-        attachLightsToBillboard(billboard1Ref.current, lightOffset1);
-        attachLightsToBillboard(billboard2Ref.current, lightOffset2);
-        attachLightsToBillboard(billboard3Ref.current, lightOffset3);
+[billboard1Ref.current, billboard2Ref.current, billboard3Ref.current].forEach(billboard => {
+    enableClipping(billboard); 
+    sceneRef.current.add(billboard);
+});
+
         
         const signboardGLTF = await loadModel(SIGNBOARD_PATH);
         const signboard = signboardGLTF.scene;
