@@ -9,36 +9,45 @@
 
 body, #root {
   width: 100vw;
-  height: 100vh;
+  /* Use dvh to prevent white space caused by mobile address bars */
+  height: 100vh; 
+  height: 100dvh; 
   overflow: hidden;
   position: fixed;
   top: 0;
   left: 0;
+  background-color: #000; /* Safety: makes any tiny gaps black instead of white */
+}
+
+/* Ensure canvas doesn't create a text-baseline gap at the bottom */
+canvas {
+  display: block;
+  vertical-align: bottom;
 }
 
 /* ================= LARGER CYBERPUNK BUTTONS ================= */
 .cyber-btn {
   position: relative;
-  padding: 12px 24px;        /* LARGER: 8px→12px, 16px→24px */
-  font-size: 14px;           /* LARGER: 12px→14px */
-  font-weight: 700;          /* BOLDER */
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  background: linear-gradient(45deg, #00ff88, #00ccff);  /* FRESH GREEN-CYAN */
-  border: 2px solid rgba(0, 255, 136, 0.5);              /* BRIGHTER BORDER */
-  border-radius: 10px;                                   /* SOFTER CORNERS */
-  color: #000;                                           /* DARK TEXT */
+  background: linear-gradient(45deg, #00ff88, #00ccff);
+  border: 2px solid rgba(0, 255, 136, 0.5);
+  border-radius: 10px;
+  color: #000;
   cursor: pointer;
   box-shadow: 
-    0 0 20px rgba(0, 255, 136, 0.6),                    /* BRIGHTER GLOW */
+    0 0 20px rgba(0, 255, 136, 0.6),
     inset 0 0 20px rgba(0, 204, 255, 0.3);
   transition: all 0.3s ease;
-  min-width: 120px;            /* LARGER: 80px→120px */
-  height: 48px;                /* LARGER: 36px→48px */
+  min-width: 120px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Orbitron', 'Courier New', monospace;     /* CYBER FONT */
+  font-family: 'Orbitron', 'Courier New', monospace;
 }
 
 .cyber-btn:hover {
@@ -53,7 +62,7 @@ body, #root {
 }
 
 .cyber-btn.secondary {
-  background: linear-gradient(45deg, #ff6b6b, #ffd93d);  /* WARM ORANGE-YELLOW */
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
   border-color: rgba(255, 107, 107, 0.5);
   box-shadow: 
     0 0 20px rgba(255, 107, 107, 0.6),
@@ -90,13 +99,13 @@ body, #root {
   z-index: 1000;
 }
 
-/* ================= CYBERPUNK LOADERS (UNCHANGED) ================= */
+/* ================= CYBERPUNK LOADERS ================= */
 .cyber-loader {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: radial-gradient(ellipse at center, #0a0a0a 0%, #000 70%);
   display: flex;
   flex-direction: column;
@@ -140,7 +149,8 @@ body, #root {
 }
 
 /* ================= CRT SCANLINES ================= */
-canvas::after {
+/* Changed to apply scanlines to a fixed overlay instead of just the canvas */
+.scanline-overlay {
   content: '';
   position: fixed;
   top: 0;
